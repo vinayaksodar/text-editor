@@ -76,10 +76,33 @@ export class EditorController {
   }
 
   onKeyDown(e) {
+    const isArrow =
+      e.key === "ArrowUp" ||
+      e.key === "ArrowDown" ||
+      e.key === "ArrowLeft" ||
+      e.key === "ArrowRight";
+
+    if (e.shiftKey && isArrow) {
+      // Allow extending selection with arrow keys
+      const dir = e.key.replace("Arrow", "").toLowerCase();
+      this.model.extendSelection(dir);
+      e.preventDefault();
+      this.view.render();
+      return;
+    }
+
     if (this.model.hasSelection()) {
       // Don't allow typing while a selection exists
       if (e.key == "Backspace") {
         this.model.deleteSelection();
+      } else if (e.key === "Delete") {
+        this.model.deleteSelection();
+      } else if (e.key === "Escape") {
+        this.model.clearSelection();
+      } else if (e.key === "ArrowLeft") {
+        this.model.moveCursorToSelectionStart();
+      } else if (e.key === "ArrowRight") {
+        this.model.moveCursorToSelectionEnd();
       }
     } else {
       if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {

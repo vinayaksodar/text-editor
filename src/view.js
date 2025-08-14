@@ -20,17 +20,28 @@ export class EditorView {
       ? this.model.normalizeSelection()
       : null;
 
-    // Hide or show cursor based on selection state
-    if (sel) {
-      this.cursorEl.style.display = "none";
-    } else {
-      this.cursorEl.style.display = "block";
-    }
+    this.cursorEl.style.display = "block";
 
     this.model.lines.forEach((text, idx) => {
       const lineEl = document.createElement("div");
       lineEl.className = "line";
 
+      // Empty lines → zero-width space for cursor positioning
+      if (!text) {
+        if (sel && idx >= sel.start.line && idx <= sel.end.line) {
+          // Entire empty line is selected
+          const span = document.createElement("span");
+          span.className = "selection";
+          span.appendChild(document.createTextNode("\u200B"));
+          lineEl.appendChild(span);
+        } else {
+          lineEl.appendChild(document.createTextNode("\u200B"));
+        }
+        this.container.appendChild(lineEl);
+        return;
+      }
+
+      // Lines with possible selection
       if (sel && idx >= sel.start.line && idx <= sel.end.line) {
         const startCh = idx === sel.start.line ? sel.start.ch : 0;
         const endCh = idx === sel.end.line ? sel.end.ch : text.length;
@@ -39,22 +50,27 @@ export class EditorView {
         const selected = text.slice(startCh, endCh);
         const after = text.slice(endCh);
 
-        // Anytime we deal with direct HTML best to escape it to prevent xss attack
-        lineEl.innerHTML =
-          escapeHtml(before) +
-          `<span class="selection">${escapeHtml(selected)}</span>` +
-          escapeHtml(after);
+        if (before) {
+          lineEl.appendChild(document.createTextNode(before));
+        }
+        if (selected) {
+          const span = document.createElement("span");
+          span.className = "selection";
+          span.appendChild(document.createTextNode(selected));
+          lineEl.appendChild(span);
+        }
+        if (after) {
+          lineEl.appendChild(document.createTextNode(after));
+        }
       } else {
-        lineEl.textContent = text || "\u200B";
+        // No selection in this line
+        lineEl.appendChild(document.createTextNode(text));
       }
 
       this.container.appendChild(lineEl);
     });
 
-    // Only update cursor if it's visible
-    if (!sel) {
-      this.updateCursor();
-    }
+    this.updateCursor();
   }
 
   updateCursor() {
@@ -62,16 +78,46 @@ export class EditorView {
     const lineEl = this.container.children[line + 1]; // +1 for cursorEl
     if (!lineEl) return;
 
-    const range = document.createRange();
-    const textNode = lineEl.firstChild;
-    const pos = Math.min(ch, textNode?.length || 0);
+    const walker = document.createTreeWalker(
+      lineEl,
+      NodeFilter.SHOW_TEXT,
+      null,
+      false
+    );
 
-    try {
-      range.setStart(textNode, pos);
-      range.setEnd(textNode, pos);
-    } catch (_) {
-      return;
+    let remaining = ch;
+    let targetNode = null;
+    let offset = 0;
+
+    while (walker.nextNode()) {
+      const len = walker.currentNode.textContent.length;
+
+      if (remaining <= len) {
+        targetNode = walker.currentNode;
+        offset = remaining;
+        break;
+      }
+
+      remaining -= len;
     }
+
+    if (!targetNode) {
+      // If cursor is at end of line
+      if (walker.currentNode) {
+        targetNode = walker.currentNode;
+        offset = targetNode.textContent.length;
+      } else {
+        // Line is empty → create a text node to put cursor into
+        const emptyNode = document.createTextNode("\u200B");
+        lineEl.appendChild(emptyNode);
+        targetNode = emptyNode;
+        offset = 0;
+      }
+    }
+
+    const range = document.createRange();
+    range.setStart(targetNode, offset);
+    range.setEnd(targetNode, offset);
 
     const rect = range.getBoundingClientRect();
     const containerRect = this.container.getBoundingClientRect();
@@ -107,9 +153,4 @@ export class EditorView {
       this.startBlink();
     }, 500); // start blinking again after delay
   }
-}
-
-// move this to a seperate utils file/folder later
-function escapeHtml(str) {
-  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }

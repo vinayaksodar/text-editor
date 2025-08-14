@@ -41,6 +41,8 @@ export class EditorModel {
 
   setSelection(start, end) {
     this.selection = { start, end };
+    // update cursor to be at end of selection
+    this.updateCursor(end);
   }
 
   // just clear the selection without actually deleting it from the model
@@ -79,9 +81,9 @@ export class EditorModel {
       start.line < end.line ||
       (start.line === end.line && start.ch <= end.ch)
     ) {
-      return { start, end };
+      return { start: { ...start }, end: { ...end } };
     }
-    return { start: end, end: start };
+    return { start: { ...end }, end: { ...start } };
   }
 
   insertText(text) {
@@ -156,6 +158,73 @@ export class EditorModel {
     }
   }
 
+  // move cursor to selection start
+  moveCursorToSelectionStart() {
+    if (this.hasSelection()) {
+      const { start } = this.normalizeSelection();
+      this.updateCursor({ line: start.line, ch: start.ch });
+      this.clearSelection();
+    }
+  }
+
+  // move cursor to selection end
+  moveCursorToSelectionEnd() {
+    if (this.hasSelection()) {
+      const { end } = this.normalizeSelection();
+      this.updateCursor({ line: end.line, ch: end.ch });
+      this.clearSelection();
+    }
+  }
+
+  // extend selection(used when user presses shift + arrow keys to select text)
+  extendSelection(dir) {
+    if (!this.hasSelection()) {
+      // Anchor starts at current cursor
+      this.setSelection(
+        { line: this.cursor.line, ch: this.cursor.ch },
+        { line: this.cursor.line, ch: this.cursor.ch }
+      );
+    }
+
+    const { start, end } = this.selection; // not normalized
+    let newEnd = { ...end };
+
+    if (dir === "left") {
+      if (newEnd.ch > 0) {
+        newEnd.ch--;
+      } else if (newEnd.line > 0) {
+        newEnd.line--;
+        newEnd.ch = this.lines[newEnd.line].length;
+      }
+    } else if (dir === "right") {
+      if (newEnd.ch < this.lines[newEnd.line].length) {
+        newEnd.ch++;
+      } else if (newEnd.line < this.lines.length - 1) {
+        newEnd.line++;
+        newEnd.ch = 0;
+      }
+    } else if (dir === "up" && newEnd.line > 0) {
+      if (newEnd.line > 0) {
+        newEnd.line--;
+        newEnd.ch = Math.min(newEnd.ch, this.lines[newEnd.line].length);
+      } else {
+        newEnd.ch = start.ch;
+      }
+    } else if (dir === "down") {
+      if (newEnd.line < this.lines.length - 1) {
+        newEnd.line++;
+        newEnd.ch = Math.min(newEnd.ch, this.lines[newEnd.line].length);
+      } else {
+        newEnd.ch = this.lines[newEnd.line].length;
+      }
+    }
+    if (start.line == newEnd.line && start.ch == newEnd.ch) {
+      this.updateCursor({ ...start });
+      this.clearSelection();
+      return;
+    }
+    this.setSelection(start, newEnd);
+  }
   updateCursor({ line, ch }) {
     this.cursor.line = line;
     this.cursor.ch = ch;
