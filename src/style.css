@@ -102,6 +102,9 @@ button:focus-visible {
   min-height: 100vh;
   caret-color: transparent; /* Hide default caret */
   position: relative;
+  user-select: none;
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE/Edge */
 }
 
 .line {
@@ -112,11 +115,9 @@ button:focus-visible {
   position: absolute;
   width: 2px;
   background: lime;
-  animation: blink 1s step-start infinite;
+  visibility: visible;
 }
 
-@keyframes blink {
-  50% {
-    opacity: 0;
-  }
+.selection {
+  background: rgba(255, 150, 150, 0.5);
 }

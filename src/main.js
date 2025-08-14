@@ -9,7 +9,9 @@ container.id = "editor-container";
 document.body.appendChild(container);
 
 // Setup editor
-const model = new EditorModel("Hello, World!\nThis is a basic editor.");
+const model = new EditorModel(
+  "Hello, World!\nHello, World!\nThis is a basic editor."
+);
 const view = new EditorView(model, container);
 const controller = new EditorController(model, view, container);
 
