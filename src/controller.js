@@ -133,6 +133,47 @@ export class EditorController {
       }
     }
 
+    // --- CUT / COPY / PASTE ---
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c") {
+      if (this.model.hasSelection()) {
+        const text = this.model.getSelectedText();
+        navigator.clipboard.writeText(text).catch(() => {
+          // fallback to execCommand for older browsers
+          document.execCommand("copy");
+        });
+      }
+      e.preventDefault();
+      return;
+    }
+
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "x") {
+      if (this.model.hasSelection()) {
+        const text = this.model.getSelectedText();
+        navigator.clipboard.writeText(text).catch(() => {
+          document.execCommand("cut");
+        });
+        this.model.deleteSelection();
+        this.view.render();
+      }
+      e.preventDefault();
+      return;
+    }
+
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "v") {
+      navigator.clipboard.readText().then((text) => {
+        if (text) {
+          if (this.model.hasSelection()) {
+            this.model.deleteSelection();
+          }
+          this.model.insertText(text);
+          this.view.render();
+        }
+      });
+      e.preventDefault();
+      return;
+    }
+    // --- END CUT / COPY / PASTE ---
+
     e.preventDefault();
     this.view.render();
   }

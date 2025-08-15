@@ -87,27 +87,38 @@ export class EditorModel {
   }
 
   insertText(text) {
-    if (this.hasSelection()) this.deleteSelection(); // In case the user has selected text and is replacing it with paste command
+    // Replace selection if present
+    if (this.hasSelection()) {
+      this.deleteSelection();
+    }
 
     const linesToInsert = text.split("\n");
+
     if (linesToInsert.length === 1) {
-      this.insertChar(linesToInsert[0]);
+      // Single line insert
+      const { line, ch } = this.cursor;
+      const currentLine = this.lines[line];
+      this.lines[line] =
+        currentLine.slice(0, ch) + linesToInsert[0] + currentLine.slice(ch);
+      this.cursor.ch += linesToInsert[0].length;
       return;
     }
 
     const { line, ch } = this.cursor;
-    const curentLine = this.linesToInsert[line];
-    const before = currentLine.slice(0, ch); // the content on the starting line which is not part of the selection
+    const currentLine = this.lines[line];
+    const before = currentLine.slice(0, ch);
     const after = currentLine.slice(ch);
 
     const newLines = [
-      before + linesToInsert[0],
-      ...linesToInsert.slice(1, -1),
-      after + linesToInsert.at(-1) + after,
+      before + linesToInsert[0], // First line
+      ...linesToInsert.slice(1, -1), // Middle lines (if any)
+      linesToInsert.at(-1) + after, // Last line
     ];
+
     this.lines.splice(line, 1, ...newLines);
 
-    this.cursor.line += linesToInsert.length - 1;
+    // Update cursor to end of inserted text
+    this.cursor.line = line + linesToInsert.length - 1;
     this.cursor.ch = linesToInsert.at(-1).length;
   }
 
