@@ -1,5 +1,11 @@
 import { UndoManager } from "./undoManager";
-
+import {
+  DeleteCharCommand,
+  InsertCharCommand,
+  InsertNewLineCommand,
+  DeleteSelectionCommand,
+  InsertTextCommand,
+} from "./commands";
 export class EditorController {
   constructor(model, view, container) {
     this.model = model;
@@ -79,7 +85,9 @@ export class EditorController {
     if (this.model.hasSelection()) {
       // Don't allow typing while a selection exists
       if (e.key == "Backspace") {
-        this.model.deleteSelection();
+        const cmd = new DeleteSelectionCommand(this.model);
+        cmd.execute();
+        this.undoManager.add(cmd);
       } else if (e.key === "Delete") {
         this.model.deleteSelection();
       } else if (e.key === "Escape") {
@@ -91,13 +99,21 @@ export class EditorController {
       }
     } else {
       if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
-        this.undoManager.add({ cmd: "insertChar", key: e.key });
-        this.model.insertChar(e.key);
+        const cmd = new InsertCharCommand(this.model, this.model.cursor, e.key);
+        cmd.execute();
+        this.undoManager.add(cmd);
       } else if (e.key === "Enter") {
-        this.undoManager.add({ cmd: "insertChar", key: "\n" });
-        this.model.insertNewLine();
+        const cmd = new InsertNewLineCommand(
+          this.model,
+          this.model.cursor,
+          e.key
+        );
+        cmd.execute();
+        this.undoManager.add(cmd);
       } else if (e.key === "Backspace") {
-        this.model.deleteChar();
+        const cmd = new DeleteCharCommand(this.model, this.model.cursor);
+        cmd.execute();
+        this.undoManager.add(cmd);
       } else if (e.key === "ArrowLeft") {
         this.model.moveCursor("left");
       } else if (e.key === "ArrowRight") {
@@ -106,13 +122,10 @@ export class EditorController {
         this.model.moveCursor("up");
       } else if (e.key === "ArrowDown") {
         this.model.moveCursor("down");
-      } else if ((e.ctrlKey || e.metaKey) && e.key === "z") {
-        const { cmd, key } = this.undoManager.remove();
-        switch (cmd) {
-          case "insertChar":
-            this.model.deleteChar();
-            break;
-        }
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+        this.undoManager.undo();
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
+        this.undoManager.redo();
       }
     }
 
@@ -135,7 +148,9 @@ export class EditorController {
         navigator.clipboard.writeText(text).catch(() => {
           document.execCommand("cut");
         });
-        this.model.deleteSelection();
+        const cmd = new DeleteSelectionCommand(this.model);
+        cmd.execute();
+        this.undoManager.add(cmd);
         this.view.render();
       }
       e.preventDefault();
@@ -144,13 +159,24 @@ export class EditorController {
 
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "v") {
       navigator.clipboard.readText().then((text) => {
-        if (text) {
-          if (this.model.hasSelection()) {
-            this.model.deleteSelection();
-          }
-          this.model.insertText(text);
-          this.view.render();
+        if (!text) return;
+
+        this.undoManager.endBatch(); // finalize any ongoing typing batch
+        this.undoManager.beginBatch(); // start paste batch
+
+        if (this.model.hasSelection()) {
+          const delCmd = new DeleteSelectionCommand(this.model);
+          delCmd.execute();
+          this.undoManager.add(delCmd);
         }
+
+        const insertCmd = new InsertTextCommand(this.model, text);
+        insertCmd.execute();
+        this.undoManager.add(insertCmd);
+
+        this.undoManager.endBatch(); // finalize paste as one undo step
+
+        this.view.render();
       });
       e.preventDefault();
       return;

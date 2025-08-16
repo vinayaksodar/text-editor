@@ -18,14 +18,18 @@ export class EditorModel {
       const prev = this.lines[line - 1];
       const curr = this.lines[line];
       this.lines.splice(line, 1);
-      this.lines[line - 1] = prev + curr;
       this.cursor.line--;
       this.cursor.ch = prev.length;
+      this.lines[this.cursor.line] += curr;
+      return "\n"; // treat merge as newline deletion
     } else if (ch > 0) {
       const l = this.lines[line];
+      const deleted = l[ch - 1];
       this.lines[line] = l.slice(0, ch - 1) + l.slice(ch);
       this.cursor.ch--;
+      return deleted;
     }
+    return null;
   }
 
   // Insert a new line at the current cursor position
