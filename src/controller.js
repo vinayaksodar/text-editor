@@ -57,21 +57,6 @@ export class EditorController {
       this.drag = false;
     });
 
-    this.container.addEventListener("copy", (e) => {
-      if (this.model.hasSelection()) {
-        const text = this.model.getSelectedText();
-        e.clipboardData.setData("text/plain", text);
-        e.preventDefault();
-      }
-    });
-
-    this.container.addEventListener("paste", (e) => {
-      const text = e.clipboardData.getData("text/plain");
-      this.model.insertText(text);
-      this.view.render();
-      e.preventDefault();
-    });
-
     this.undoManager = new UndoManager();
   }
 
@@ -128,8 +113,6 @@ export class EditorController {
             this.model.deleteChar();
             break;
         }
-      } else {
-        return;
       }
     }
 
