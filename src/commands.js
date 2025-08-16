@@ -21,9 +21,9 @@ export class InsertCharCommand {
 
 // Insert a newline
 export class InsertNewLineCommand {
-  constructor(model, pos) {
+  constructor(model) {
     this.model = model;
-    this.pos = { ...pos };
+    this.pos = { ...this.model.cursor };
     this.afterPos = null;
   }
 

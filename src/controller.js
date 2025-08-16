@@ -67,6 +67,19 @@ export class EditorController {
   }
 
   onKeyDown(e) {
+    // Handle undo/redo first
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+      this.undoManager.undo();
+      e.preventDefault();
+      this.view.render();
+      return;
+    } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
+      this.undoManager.redo();
+      e.preventDefault();
+      this.view.render();
+      return;
+    }
+
     const isArrow =
       e.key === "ArrowUp" ||
       e.key === "ArrowDown" ||
@@ -103,29 +116,15 @@ export class EditorController {
         cmd.execute();
         this.undoManager.add(cmd);
       } else if (e.key === "Enter") {
-        const cmd = new InsertNewLineCommand(
-          this.model,
-          this.model.cursor,
-          e.key
-        );
+        const cmd = new InsertNewLineCommand(this.model);
         cmd.execute();
         this.undoManager.add(cmd);
       } else if (e.key === "Backspace") {
         const cmd = new DeleteCharCommand(this.model, this.model.cursor);
         cmd.execute();
         this.undoManager.add(cmd);
-      } else if (e.key === "ArrowLeft") {
-        this.model.moveCursor("left");
-      } else if (e.key === "ArrowRight") {
-        this.model.moveCursor("right");
-      } else if (e.key === "ArrowUp") {
-        this.model.moveCursor("up");
-      } else if (e.key === "ArrowDown") {
-        this.model.moveCursor("down");
-      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
-        this.undoManager.undo();
-      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
-        this.undoManager.redo();
+      } else if (isArrow) {
+        this.model.moveCursor(e.key.replace("Arrow", "").toLowerCase());
       }
     }
 
