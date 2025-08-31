@@ -7,10 +7,10 @@ import {
   InsertTextCommand,
 } from "./commands";
 export class EditorController {
-  constructor(model, view, container) {
+  constructor(model, view, wrapper) {
     this.model = model;
     this.view = view;
-    this.container = container;
+    this.container = view.container;
 
     this.container.tabIndex = 0; // Make focusable
     this.container.addEventListener("keydown", this.onKeyDown.bind(this));
@@ -24,7 +24,12 @@ export class EditorController {
     this.pendingRenderFrame = null;
     this.pendingSelection = null;
 
+    // Search matches
+    this.currentMatches = [];
+    this.currentMatchIndex = -1;
+
     this.container.addEventListener("mousedown", (e) => {
+      e.preventDefault();
       this.mouseDown = true;
       this.drag = false;
       this.mouseDownPos = { clientX: e.clientX, clientY: e.clientY };
@@ -64,6 +69,83 @@ export class EditorController {
     });
 
     this.undoManager = new UndoManager();
+
+    window.addEventListener("keydown", this.onGlobalKeyDown);
+  }
+
+  onGlobalKeyDown = (e) => {
+    // Ctrl+F or Cmd+F → Show Search
+    if ((e.ctrlKey || e.metaKey) && e.key === "f") {
+      e.preventDefault();
+      this.view.showSearchWidget();
+      this.bindSearchWidgetEvents();
+    }
+
+    // Escape → Hide Search and focus editor
+    if (e.key === "Escape") {
+      this.view.hideSearchWidget();
+      this.container.focus();
+    }
+  };
+
+  bindSearchWidgetEvents() {
+    const widget = this.view.widgetLayer.querySelector(".search-widget");
+    const input = widget.querySelector("input");
+    const nextBtn = widget.querySelector("button:nth-of-type(1)");
+    const prevBtn = widget.querySelector("button:nth-of-type(2)");
+
+    input.addEventListener("input", () => {
+      this.performSearch(input.value);
+    });
+
+    nextBtn.addEventListener("click", () => this.jumpToMatch(1));
+    prevBtn.addEventListener("click", () => this.jumpToMatch(-1));
+  }
+  performSearch(term) {
+    if (!term) {
+      this.currentMatches = [];
+      this.view.clearHighlights();
+      return;
+    }
+
+    // find matches across all lines
+    this.currentMatches = [];
+    this.model.lines.forEach((line, lineIdx) => {
+      let start = 0;
+      while (true) {
+        const idx = line.indexOf(term, start);
+        if (idx === -1) break;
+        this.currentMatches.push({
+          line: lineIdx,
+          start: idx,
+          end: idx + term.length,
+        });
+        start = idx + term.length;
+      }
+    });
+
+    this.currentMatchIndex = this.currentMatches.length > 0 ? 0 : -1;
+    this.view.highlightMatches(this.currentMatches, this.currentMatchIndex);
+
+    if (this.currentMatchIndex >= 0) {
+      const match = this.currentMatches[this.currentMatchIndex];
+      this.model.updateCursor({ line: match.line, ch: match.start });
+      this.view.render();
+    }
+  }
+
+  jumpToMatch(direction) {
+    if (this.currentMatches.length === 0) return;
+
+    this.currentMatchIndex =
+      (this.currentMatchIndex + direction + this.currentMatches.length) %
+      this.currentMatches.length;
+
+    this.view.highlightMatches(this.currentMatches, this.currentMatchIndex);
+
+    const match = this.currentMatches[this.currentMatchIndex];
+    this.model.updateCursor({ line: match.line, ch: match.start });
+    this.view.render();
   }
 
   onKeyDown(e) {
