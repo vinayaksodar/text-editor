@@ -9,6 +9,9 @@
   padding: 1rem;
   white-space: pre;
   position: relative;
+  overflow-y: auto;
+  font-family: monospace;
+  line-height: 20px;
 }
 .widget-layer {
   /* Stays visible without scrolling */

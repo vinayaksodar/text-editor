@@ -14,10 +14,14 @@ const editorContainer = document.querySelector("#editor-container");
 const widgetLayer = document.querySelector("#widget-layer");
 const wrapper = document.querySelector(".editor-wrapper");
 
-// Setup editor
-const model = new EditorModel(
-  "Hello, World!\nHello, World!\nThis is a basic editor."
-);
+// Generate a lot of text
+let bigText = "";
+for (let i = 1; i <= 20000; i++) {
+  bigText += `Line ${i}: This is some sample text for testing the editor.\n`;
+}
+
+// Setup editor with generated text
+const model = new EditorModel(bigText);
 const view = new EditorView(model, editorContainer, widgetLayer);
 const controller = new EditorController(model, view, wrapper);
 
