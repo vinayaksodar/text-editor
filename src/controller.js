@@ -18,6 +18,7 @@ export class EditorController {
 
     // Initial state
     this.drag = false;
+    this.dragStartModelPos = null;
     this.mouseDown = false;
     this.mouseDownPos = { clientX: 0, clientY: 0 };
     this.dragThreshold = 5;
@@ -33,6 +34,8 @@ export class EditorController {
       this.mouseDown = true;
       this.drag = false;
       this.mouseDownPos = { clientX: e.clientX, clientY: e.clientY };
+      // Resolve model position immediately and store it as we have virtualized rendering
+      this.dragStartModelPos = this.viewToModelPos(this.mouseDownPos);
     });
 
     this.container.addEventListener("mousemove", (e) => {
@@ -48,7 +51,7 @@ export class EditorController {
 
       if (this.drag) {
         this.pendingSelection = {
-          startClientPos: this.mouseDownPos,
+          startModelPos: this.dragStartModelPos, // keep fixed
           endClientPos: { clientX: e.clientX, clientY: e.clientY },
         };
         this.scheduleRenderSelection(); // request safe render
@@ -66,6 +69,7 @@ export class EditorController {
       this.pendingSelection = null;
       this.pendingRenderFrame = null;
       this.drag = false;
+      this.dragStartModelPos = null;
     });
 
     this.undoManager = new UndoManager();
@@ -291,8 +295,8 @@ export class EditorController {
 
       if (!this.pendingSelection) return;
 
-      const { startClientPos, endClientPos } = this.pendingSelection;
-      const startModelPos = this.viewToModelPos(startClientPos);
+      const { startModelPos, endClientPos } = this.pendingSelection;
+
       const endModelPos = this.viewToModelPos(endClientPos);
       this.model.setSelection(startModelPos, endModelPos);
       this.model.updateCursor(endModelPos);
@@ -354,6 +358,6 @@ export class EditorController {
       totalOffset += len;
     }
 
-    return { line: closestLineIdx, ch: closestCh };
+    return { line: this.view.startLine + closestLineIdx, ch: closestCh };
   }
 }
