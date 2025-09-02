@@ -1,0 +1,13 @@
+#editor-container {
+  flex: 1; /* Take available vertical space */
+  padding: 1rem;
+  white-space: pre;
+  position: relative;
+  overflow-y: auto;
+  font-family: monospace;
+  line-height: 20px;
+}
+
+.line {
+  display: block;
+}

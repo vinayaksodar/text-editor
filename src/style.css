@@ -4,39 +4,7 @@
   height: 100vh; /* Full viewport for wrapper */
 }
 
-#editor-container {
-  flex: 1; /* Take available vertical space */
-  padding: 1rem;
-  white-space: pre;
-  position: relative;
-  overflow-y: auto;
-  font-family: monospace;
-  line-height: 20px;
-}
-.widget-layer {
-  /* Stays visible without scrolling */
-  flex-shrink: 0; /* Prevent collapse */
-}
-
-.line {
-  display: block;
-}
-
-.cursor {
-  position: absolute;
-  width: 2px;
-  background: lime;
-  visibility: visible;
-}
-
-.selection {
-  background: rgba(255, 150, 150, 0.5);
-}
-
-.search-match {
-  background: yellow;
-}
-
-.search-match-current {
-  background: orange;
+body {
+  margin: 0;
+  padding: 0;
 }

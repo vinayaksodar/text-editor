@@ -1,18 +1,30 @@
 import "./style.css";
-import { EditorModel } from "./model.js";
-import { EditorView } from "./view.js";
-import { EditorController } from "./controller.js";
+import { EditorModel } from "./editor/EditorModel.js";
+import { EditorView } from "./editor/EditorView.js";
+import { EditorController } from "./editor/EditorController.js";
+import { createWidgetLayer } from "./components/WidgetLayer/WidgetLayer.js";
+import { createToolbar } from "./components/Toolbar/Toolbar.js";
+const app = document.querySelector("#app");
 
-document.querySelector("#app").innerHTML = `
-  <div class="editor-wrapper">
-    <div class="widget-layer" id="widget-layer"></div>
-    <div class="editor-container" id="editor-container"></div>
-  </div>
-`;
+// Root wrapper
+const wrapper = document.createElement("div");
+wrapper.className = "editor-wrapper";
 
-const editorContainer = document.querySelector("#editor-container");
-const widgetLayer = document.querySelector("#widget-layer");
-const wrapper = document.querySelector(".editor-wrapper");
+// Toolbar container
+const toolbar = createToolbar();
+
+// Widget layer
+const widgetLayer = createWidgetLayer();
+
+// Editor container
+const editorContainer = createEditorContainer();
+
+// Assemble
+wrapper.appendChild(toolbar);
+wrapper.appendChild(widgetLayer);
+wrapper.appendChild(editorContainer);
+
+app.appendChild(wrapper);
 
 // Generate a lot of text
 let bigText = "";
@@ -23,6 +35,6 @@ for (let i = 1; i <= 20000; i++) {
 // Setup editor with generated text
 const model = new EditorModel(bigText);
 const view = new EditorView(model, editorContainer, widgetLayer);
-const controller = new EditorController(model, view, wrapper);
+const controller = new EditorController(model, view, wrapper, toolbar);
 
 view.render();

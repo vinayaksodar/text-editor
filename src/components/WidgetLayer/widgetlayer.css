@@ -1,0 +1,23 @@
+.widget-layer {
+  /* Stays visible without scrolling */
+  flex-shrink: 0; /* Prevent collapse */
+}
+
+.cursor {
+  position: absolute;
+  width: 2px;
+  background: lime;
+  visibility: visible;
+}
+
+.selection {
+  background: rgba(255, 150, 150, 0.5);
+}
+
+.search-match {
+  background: yellow;
+}
+
+.search-match-current {
+  background: orange;
+}

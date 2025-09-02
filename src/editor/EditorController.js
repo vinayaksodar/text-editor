@@ -11,6 +11,7 @@ export class EditorController {
     this.model = model;
     this.view = view;
     this.container = view.container;
+    this.toolbar = toolbar;
 
     this.container.tabIndex = 0; // Make focusable
     this.container.addEventListener("keydown", this.onKeyDown.bind(this));
@@ -278,14 +279,6 @@ export class EditorController {
     this.model.updateCursor({ line, ch });
     this.view.render();
   }
-
-  // handleSelection({ startClientPos, endClientPos }) {
-  //   const startModelPos = this.viewToModelPos(startClientPos);
-  //   const endModelPos = this.viewToModelPos(endClientPos);
-  //   console.log(startModelPos, endModelPos);
-  //   this.model.setSelection(startModelPos, endModelPos);
-  //   this.view.render();
-  // }
 
   scheduleRenderSelection() {
     if (this.pendingRenderFrame) return;
