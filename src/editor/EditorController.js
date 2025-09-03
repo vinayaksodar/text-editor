@@ -11,24 +11,23 @@ import { KeyboardHandler } from "./handlers/KeyboardHandler.js";
 import { SearchHandler } from "./handlers/SearchHandler.js";
 
 export class EditorController {
-  constructor(model, view, wrapper, toolbar, fileManager) {
+  constructor(model, view, wrapper, toolbar, fileManager, hiddenInput) {
     this.model = model;
     this.view = view;
     this.container = view.container;
+    this.hiddenInput = hiddenInput;
     this.toolbar = toolbar;
     this.fileManager = fileManager;
 
-    this.container.tabIndex = 0; // Make focusable
-
     // Ensure container gets focus when clicked
-    this.container.addEventListener('click', () => {
-      this.container.focus();
+    this.container.addEventListener("click", () => {
+      this.hiddenInput.focus();
     });
 
-    this.container.focus();
+    this.hiddenInput.focus();
 
     this.mouseHandler = new MouseHandler(this, this.container);
-    this.keyBoardHandler = new KeyboardHandler(this, this.container);
+    this.keyBoardHandler = new KeyboardHandler(this, this.hiddenInput);
     this.searchHandler = new SearchHandler(this, this.view, this.model);
 
     this.undoManager = new UndoManager();
@@ -86,7 +85,7 @@ export class EditorController {
     // Escape → Close Search and focus editor
     if (e.key === "Escape") {
       this.searchHandler.closeSearch();
-      this.view.container.focus();
+      this.hiddenInput.focus();
     }
   };
 
@@ -96,7 +95,7 @@ export class EditorController {
     this.model.updateCursor({ line, ch });
     this.view.render();
     // Ensure the editor container has focus after click
-    this.container.focus();
+    this.hiddenInput.focus();
   }
 
   viewToModelPos({ clientX, clientY }) {
@@ -104,18 +103,18 @@ export class EditorController {
     if (lines.length === 0) return { line: 0, ch: 0 };
 
     const containerRect = this.container.getBoundingClientRect();
-    
+
     // Handle coordinates way outside the viewport
     const maxDistance = 1000; // pixels
     let adjustedClientY = clientY;
-    
+
     if (clientY < containerRect.top - maxDistance) {
       // Way above - go to document start
       return { line: 0, ch: 0 };
     } else if (clientY > containerRect.bottom + maxDistance) {
       // Way below - go to document end
       const lastLine = this.model.lines.length - 1;
-      const lastLineText = this.model.lines[lastLine] || '';
+      const lastLineText = this.model.lines[lastLine] || "";
       return { line: lastLine, ch: lastLineText.length };
     } else if (clientY < containerRect.top) {
       // Above the container - select first visible line
@@ -141,7 +140,7 @@ export class EditorController {
 
     const lineEl = lines[closestLineIdx];
     const lineRect = lineEl.getBoundingClientRect();
-    
+
     // Handle horizontal bounds
     let adjustedClientX = clientX;
     if (clientX < lineRect.left) {
@@ -149,8 +148,12 @@ export class EditorController {
       return { line: this.view.startLine + closestLineIdx, ch: 0 };
     } else if (clientX > lineRect.right) {
       // Right of the line - position at end
-      const lineText = this.model.lines[this.view.startLine + closestLineIdx] || '';
-      return { line: this.view.startLine + closestLineIdx, ch: lineText.length };
+      const lineText =
+        this.model.lines[this.view.startLine + closestLineIdx] || "";
+      return {
+        line: this.view.startLine + closestLineIdx,
+        ch: lineText.length,
+      };
     }
 
     const walker = document.createTreeWalker(
@@ -194,8 +197,8 @@ export class EditorController {
   setupToolbarHandlers() {
     if (!this.toolbar) return;
 
-    this.toolbar.addEventListener('click', (e) => {
-      const button = e.target.closest('.iconbtn');
+    this.toolbar.addEventListener("click", (e) => {
+      const button = e.target.closest(".iconbtn");
       if (!button) return;
 
       const action = button.dataset.action;
@@ -206,62 +209,62 @@ export class EditorController {
   async handleToolbarAction(action) {
     try {
       switch (action) {
-        case 'new':
+        case "new":
           this.handleNewFile();
           break;
-        case 'open':
+        case "open":
           await this.handleOpenFile();
           break;
-        case 'save':
+        case "save":
           this.handleSaveFile();
           // Focus editor after save
-          this.container.focus();
+          this.hiddenInput.focus();
           break;
-        case 'export':
+        case "export":
           this.handleExportFile();
           // Focus editor after export
-          this.container.focus();
+          this.hiddenInput.focus();
           break;
-        case 'files':
+        case "files":
           this.handleManageFiles();
           // Focus will be handled when modal closes
           break;
-        case 'undo':
+        case "undo":
           this.handleUndo();
-          this.container.focus();
+          this.hiddenInput.focus();
           break;
-        case 'redo':
+        case "redo":
           this.handleRedo();
-          this.container.focus();
+          this.hiddenInput.focus();
           break;
-        case 'cut':
+        case "cut":
           await this.handleCut();
-          this.container.focus();
+          this.hiddenInput.focus();
           break;
-        case 'copy':
+        case "copy":
           await this.handleCopy();
-          this.container.focus();
+          this.hiddenInput.focus();
           break;
-        case 'paste':
+        case "paste":
           await this.handlePaste();
-          this.container.focus();
+          this.hiddenInput.focus();
           break;
-        case 'search':
+        case "search":
           this.handleSearch();
           // Search widget will handle its own focus
           break;
       }
     } catch (error) {
-      console.error('Toolbar action failed:', error);
-      alert('Operation failed: ' + error.message);
+      console.error("Toolbar action failed:", error);
+      alert("Operation failed: " + error.message);
       // Focus editor even after errors
-      this.container.focus();
+      this.hiddenInput.focus();
     }
   }
 
   handleNewFile() {
     if (this.fileManager.hasUnsavedChanges()) {
-      if (!confirm('You have unsaved changes. Create new file anyway?')) {
+      if (!confirm("You have unsaved changes. Create new file anyway?")) {
         return;
       }
     }
@@ -275,14 +278,17 @@ export class EditorController {
       this.focusEditor();
       console.log(`Opened file: ${result.fileName} (${result.size} bytes)`);
     } catch (error) {
-      if (error.message !== 'No file selected') {
+      if (error.message !== "No file selected") {
         throw error;
       }
     }
   }
 
   handleSaveFile() {
-    const fileName = prompt('Enter filename:', this.fileManager.currentFileName);
+    const fileName = prompt(
+      "Enter filename:",
+      this.fileManager.currentFileName
+    );
     if (fileName) {
       this.fileManager.saveToLocalStorage(fileName);
       console.log(`Saved as: ${fileName}`);
@@ -318,7 +324,7 @@ export class EditorController {
         await navigator.clipboard.writeText(text);
         this.executeCommand(new DeleteSelectionCommand(this.model));
       } catch (error) {
-        console.error('Cut failed:', error);
+        console.error("Cut failed:", error);
         // Fallback: just delete the selection without copying
         this.executeCommand(new DeleteSelectionCommand(this.model));
       }
@@ -331,7 +337,7 @@ export class EditorController {
       try {
         await navigator.clipboard.writeText(text);
       } catch (error) {
-        console.error('Copy failed:', error);
+        console.error("Copy failed:", error);
         // Could show a message to user that copy failed
       }
     }
@@ -344,20 +350,20 @@ export class EditorController {
         this.executeCommand(new InsertTextCommand(this.model, text));
       }
     } catch (error) {
-      console.error('Paste failed:', error);
+      console.error("Paste failed:", error);
       // Could show a message to user that paste failed
     }
   }
 
   handleSearch() {
     this.view.showSearchWidget();
-    this.view.searchWidget.querySelector('.search-input').focus();
+    this.view.searchWidget.querySelector(".search-input").focus();
   }
 
   showFileManager() {
     // Create a simple file manager modal
-    const modal = document.createElement('div');
-    modal.className = 'file-manager-modal';
+    const modal = document.createElement("div");
+    modal.className = "file-manager-modal";
     modal.innerHTML = `
       <div class="file-manager-content">
         <h3>Manage Files</h3>
@@ -368,18 +374,20 @@ export class EditorController {
       </div>
     `;
 
-    const fileList = modal.querySelector('.file-list');
+    const fileList = modal.querySelector(".file-list");
     const savedFiles = this.fileManager.getSavedFiles();
 
     if (Object.keys(savedFiles).length === 0) {
-      fileList.innerHTML = '<p>No saved files</p>';
+      fileList.innerHTML = "<p>No saved files</p>";
     } else {
       Object.entries(savedFiles).forEach(([fileName, fileData]) => {
-        const fileItem = document.createElement('div');
-        fileItem.className = 'file-item';
+        const fileItem = document.createElement("div");
+        fileItem.className = "file-item";
         fileItem.innerHTML = `
           <span class="file-name">${fileName}</span>
-          <span class="file-date">${new Date(fileData.timestamp).toLocaleString()}</span>
+          <span class="file-date">${new Date(
+            fileData.timestamp
+          ).toLocaleString()}</span>
           <button class="btn-small" data-action="load" data-filename="${fileName}">Load</button>
           <button class="btn-small btn-danger" data-action="delete" data-filename="${fileName}">Delete</button>
         `;
@@ -387,20 +395,20 @@ export class EditorController {
       });
     }
 
-    modal.addEventListener('click', (e) => {
+    modal.addEventListener("click", (e) => {
       const action = e.target.dataset.action;
       const fileName = e.target.dataset.filename;
 
-      if (action === 'close') {
+      if (action === "close") {
         document.body.removeChild(modal);
         // Restore focus to editor when modal closes
-        this.container.focus();
-      } else if (action === 'load') {
+        this.hiddenInput.focus();
+      } else if (action === "load") {
         if (this.fileManager.loadFromLocalStorage(fileName)) {
           this.focusEditor();
           document.body.removeChild(modal);
         }
-      } else if (action === 'delete') {
+      } else if (action === "delete") {
         if (confirm(`Delete file "${fileName}"?`)) {
           this.fileManager.deleteFromLocalStorage(fileName);
           this.showFileManager(); // Refresh the modal
@@ -422,7 +430,7 @@ export class EditorController {
 
   // Ensure editor is focused and ready for input
   focusEditor() {
-    this.container.focus();
+    this.hiddenInput.focus();
     // Force a re-render to ensure cursor is visible
     this.view.render();
   }

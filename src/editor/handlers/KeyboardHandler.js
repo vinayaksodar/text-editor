@@ -7,11 +7,11 @@ import {
 } from "../commands.js";
 
 export class KeyboardHandler {
-  constructor(controller, container) {
+  constructor(controller, inputElement) {
     this.controller = controller;
-    this.container = container;
+    this.inputElement = inputElement;
 
-    this.container.addEventListener("keydown", this.onKeyDown);
+    this.inputElement.addEventListener("keydown", this.onKeyDown);
   }
 
   onKeyDown = (e) => {
@@ -20,7 +20,6 @@ export class KeyboardHandler {
     // --- UNDO / REDO ---
     // Note: Undo/Redo is handled by the global keyboard handler in EditorController
     // to avoid conflicts with toolbar actions
-    
 
     const isArrow =
       e.key === "ArrowUp" ||

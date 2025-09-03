@@ -27,11 +27,12 @@ editorArea.className = "editor-area";
 const lineNumbersContainer = createLineNumbers();
 
 // Editor container
-const editorContainer = createEditorContainer();
+const { container: editorContainer, hiddenInput } = createEditorContainer();
 
 // Assemble editor area
 editorArea.appendChild(lineNumbersContainer);
 editorArea.appendChild(editorContainer);
+editorArea.appendChild(hiddenInput); // hidden input lives alongside container
 
 // Assemble
 wrapper.appendChild(toolbar);
@@ -49,23 +50,35 @@ for (let i = 1; i <= 20000; i++) {
 // Setup editor with generated text
 const model = new EditorModel(bigText);
 const fileManager = new FileManager(model);
-const view = new EditorView(model, editorContainer, widgetLayer, lineNumbersContainer);
-const controller = new EditorController(model, view, wrapper, toolbar, fileManager);
+const view = new EditorView(
+  model,
+  editorContainer,
+  widgetLayer,
+  lineNumbersContainer
+);
+const controller = new EditorController(
+  model,
+  view,
+  wrapper,
+  toolbar,
+  fileManager,
+  hiddenInput
+);
 
 // Try to load from auto-save first
 if (fileManager.loadFromAutoSave()) {
-  console.log('Loaded from auto-save');
+  console.log("Loaded from auto-save");
 }
 
 // Add focus management to editor area and line numbers
-editorArea.addEventListener('click', (e) => {
+editorArea.addEventListener("click", (e) => {
   // Focus the editor when clicking anywhere in the editor area
-  editorContainer.focus();
+  hiddenInput.focus();
 });
 
-lineNumbersContainer.addEventListener('click', (e) => {
+lineNumbersContainer.addEventListener("click", (e) => {
   // Focus the editor when clicking on line numbers
-  editorContainer.focus();
+  hiddenInput.focus();
 });
 
 view.render();
