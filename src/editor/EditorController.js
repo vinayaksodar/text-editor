@@ -6,6 +6,10 @@ import {
   DeleteSelectionCommand,
   InsertTextCommand,
 } from "./commands";
+import { MouseHandler } from "./handlers/MouseHandler";
+import { KeyboardHandler } from "./handlers/KeyboardHandler";
+import { SearchHandler } from "./handlers/SearchHandler";
+
 export class EditorController {
   constructor(model, view, wrapper) {
     this.model = model;
@@ -14,67 +18,16 @@ export class EditorController {
     this.toolbar = toolbar;
 
     this.container.tabIndex = 0; // Make focusable
-    this.container.addEventListener("keydown", this.onKeyDown.bind(this));
+
     this.container.focus();
 
-    // Initial state
-    this.drag = false;
-    this.dragStartModelPos = null;
-    this.mouseDown = false;
-    this.mouseDownPos = { clientX: 0, clientY: 0 };
-    this.dragThreshold = 5;
-    this.pendingRenderFrame = null;
-    this.pendingSelection = null;
-
-    // Search matches
-    this.currentMatches = [];
-    this.currentMatchIndex = -1;
-
-    this.container.addEventListener("mousedown", (e) => {
-      e.preventDefault();
-      this.mouseDown = true;
-      this.drag = false;
-      this.mouseDownPos = { clientX: e.clientX, clientY: e.clientY };
-      // Resolve model position immediately and store it as we have virtualized rendering
-      this.dragStartModelPos = this.viewToModelPos(this.mouseDownPos);
-    });
-
-    this.container.addEventListener("mousemove", (e) => {
-      if (!this.mouseDown) return;
-
-      const dx = e.clientX - this.mouseDownPos.clientX;
-      const dy = e.clientY - this.mouseDownPos.clientY;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-
-      if (!this.drag && distance > this.dragThreshold) {
-        this.drag = true;
-      }
-
-      if (this.drag) {
-        this.pendingSelection = {
-          startModelPos: this.dragStartModelPos, // keep fixed
-          endClientPos: { clientX: e.clientX, clientY: e.clientY },
-        };
-        this.scheduleRenderSelection(); // request safe render
-      }
-    });
-
-    this.container.addEventListener("mouseup", (e) => {
-      this.mouseDown = false;
-
-      if (!this.drag) {
-        this.handleClick({
-          clientPos: { clientX: e.clientX, clientY: e.clientY },
-        });
-      }
-      this.pendingSelection = null;
-      this.pendingRenderFrame = null;
-      this.drag = false;
-      this.dragStartModelPos = null;
-    });
+    this.mouseHandler = new MouseHandler(this, this.container);
+    this.keyBoardHandler = new KeyboardHandler(this, this.container);
+    this.searchHandler = new SearchHandler(this, this.view, this.model);
 
     this.undoManager = new UndoManager();
 
+    // Listen for global shortcuts
     window.addEventListener("keydown", this.onGlobalKeyDown);
   }
 
@@ -83,218 +36,21 @@ export class EditorController {
     if ((e.ctrlKey || e.metaKey) && e.key === "f") {
       e.preventDefault();
       this.view.showSearchWidget();
-      this.bindSearchWidgetEvents();
+      this.view.searchWidget.querySelector(".search-input").focus();
     }
 
     // Escape → Hide Search and focus editor
     if (e.key === "Escape") {
       this.view.hideSearchWidget();
-      this.container.focus();
+      this.view.container.focus();
     }
   };
-
-  bindSearchWidgetEvents() {
-    const widget = this.view.widgetLayer.querySelector(".search-widget");
-    const input = widget.querySelector("input");
-    const nextBtn = widget.querySelector("button:nth-of-type(1)");
-    const prevBtn = widget.querySelector("button:nth-of-type(2)");
-
-    input.addEventListener("input", () => {
-      this.performSearch(input.value);
-    });
-
-    nextBtn.addEventListener("click", () => this.jumpToMatch(1));
-    prevBtn.addEventListener("click", () => this.jumpToMatch(-1));
-  }
-  performSearch(term) {
-    if (!term) {
-      this.currentMatches = [];
-      this.view.clearHighlights();
-      return;
-    }
-
-    // find matches across all lines
-    this.currentMatches = [];
-    this.model.lines.forEach((line, lineIdx) => {
-      let start = 0;
-      while (true) {
-        const idx = line.indexOf(term, start);
-        if (idx === -1) break;
-        this.currentMatches.push({
-          line: lineIdx,
-          start: idx,
-          end: idx + term.length,
-        });
-        start = idx + term.length;
-      }
-    });
-
-    this.currentMatchIndex = this.currentMatches.length > 0 ? 0 : -1;
-    this.view.highlightMatches(this.currentMatches, this.currentMatchIndex);
-
-    if (this.currentMatchIndex >= 0) {
-      const match = this.currentMatches[this.currentMatchIndex];
-      this.model.updateCursor({ line: match.line, ch: match.start });
-      this.view.render();
-    }
-  }
-
-  jumpToMatch(direction) {
-    if (this.currentMatches.length === 0) return;
-
-    this.currentMatchIndex =
-      (this.currentMatchIndex + direction + this.currentMatches.length) %
-      this.currentMatches.length;
-
-    this.view.highlightMatches(this.currentMatches, this.currentMatchIndex);
-
-    const match = this.currentMatches[this.currentMatchIndex];
-    this.model.updateCursor({ line: match.line, ch: match.start });
-    this.view.render();
-  }
-
-  onKeyDown(e) {
-    // Handle undo/redo first
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
-      this.undoManager.undo();
-      e.preventDefault();
-      this.view.render();
-      return;
-    } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
-      this.undoManager.redo();
-      e.preventDefault();
-      this.view.render();
-      return;
-    }
-
-    const isArrow =
-      e.key === "ArrowUp" ||
-      e.key === "ArrowDown" ||
-      e.key === "ArrowLeft" ||
-      e.key === "ArrowRight";
-
-    if (e.shiftKey && isArrow) {
-      // Allow extending selection with arrow keys
-      const dir = e.key.replace("Arrow", "").toLowerCase();
-      this.model.extendSelection(dir);
-      e.preventDefault();
-      this.view.render();
-      return;
-    }
-
-    if (this.model.hasSelection()) {
-      // Don't allow typing while a selection exists
-      if (e.key == "Backspace") {
-        const cmd = new DeleteSelectionCommand(this.model);
-        cmd.execute();
-        this.undoManager.add(cmd);
-      } else if (e.key === "Delete") {
-        this.model.deleteSelection();
-      } else if (e.key === "Escape") {
-        this.model.clearSelection();
-      } else if (e.key === "ArrowLeft") {
-        this.model.moveCursorToSelectionStart();
-      } else if (e.key === "ArrowRight") {
-        this.model.moveCursorToSelectionEnd();
-      }
-    } else {
-      if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
-        const cmd = new InsertCharCommand(this.model, this.model.cursor, e.key);
-        cmd.execute();
-        this.undoManager.add(cmd);
-      } else if (e.key === "Enter") {
-        const cmd = new InsertNewLineCommand(this.model);
-        cmd.execute();
-        this.undoManager.add(cmd);
-      } else if (e.key === "Backspace") {
-        const cmd = new DeleteCharCommand(this.model, this.model.cursor);
-        cmd.execute();
-        this.undoManager.add(cmd);
-      } else if (isArrow) {
-        this.model.moveCursor(e.key.replace("Arrow", "").toLowerCase());
-      }
-    }
-
-    // --- CUT / COPY / PASTE ---
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c") {
-      if (this.model.hasSelection()) {
-        const text = this.model.getSelectedText();
-        navigator.clipboard.writeText(text).catch(() => {
-          // fallback to execCommand for older browsers
-          document.execCommand("copy");
-        });
-      }
-      e.preventDefault();
-      return;
-    }
-
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "x") {
-      if (this.model.hasSelection()) {
-        const text = this.model.getSelectedText();
-        navigator.clipboard.writeText(text).catch(() => {
-          document.execCommand("cut");
-        });
-        const cmd = new DeleteSelectionCommand(this.model);
-        cmd.execute();
-        this.undoManager.add(cmd);
-        this.view.render();
-      }
-      e.preventDefault();
-      return;
-    }
-
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "v") {
-      navigator.clipboard.readText().then((text) => {
-        if (!text) return;
-
-        this.undoManager.endBatch(); // finalize any ongoing typing batch
-        this.undoManager.beginBatch(); // start paste batch
-
-        if (this.model.hasSelection()) {
-          const delCmd = new DeleteSelectionCommand(this.model);
-          delCmd.execute();
-          this.undoManager.add(delCmd);
-        }
-
-        const insertCmd = new InsertTextCommand(this.model, text);
-        insertCmd.execute();
-        this.undoManager.add(insertCmd);
-
-        this.undoManager.endBatch(); // finalize paste as one undo step
-
-        this.view.render();
-      });
-      e.preventDefault();
-      return;
-    }
-    // --- END CUT / COPY / PASTE ---
-
-    e.preventDefault();
-    this.view.render();
-  }
 
   handleClick({ clientPos }) {
     this.model.clearSelection();
     const { line, ch } = this.viewToModelPos(clientPos);
     this.model.updateCursor({ line, ch });
     this.view.render();
-  }
-
-  scheduleRenderSelection() {
-    if (this.pendingRenderFrame) return;
-
-    this.pendingRenderFrame = requestAnimationFrame(() => {
-      this.pendingRenderFrame = null;
-
-      if (!this.pendingSelection) return;
-
-      const { startModelPos, endClientPos } = this.pendingSelection;
-
-      const endModelPos = this.viewToModelPos(endClientPos);
-      this.model.setSelection(startModelPos, endModelPos);
-      this.model.updateCursor(endModelPos);
-      this.view.render();
-    });
   }
 
   viewToModelPos({ clientX, clientY }) {

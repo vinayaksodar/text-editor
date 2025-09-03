@@ -1,9 +1,13 @@
+import { createSearchWidget } from "../components/SearchWidget/SearchWidget,js";
 export class EditorView {
   constructor(model, container, widgetLayer) {
     this.model = model;
     this.container = container;
     this.widgetLayer = widgetLayer;
 
+    // Create floating search widget inside widget layer
+    this.searchWidget = createSearchWidget();
+    this.widgetLayer.appendChild(this.searchWidget);
     this.searchMatches = [];
 
     this.cursorEl = document.createElement("div");
@@ -266,23 +270,13 @@ export class EditorView {
 
   // Add a method for showing search widget
   showSearchWidget() {
-    let widget = this.widgetLayer.querySelector(".search-widget");
-    if (!widget) {
-      widget = document.createElement("div");
-      widget.className = "search-widget";
-      widget.innerHTML = `
-        <input type="text" placeholder="Find..." />
-        <button>Next</button>
-        <button>Prev</button>
-      `;
-      this.widgetLayer.appendChild(widget);
-    }
-    widget.style.display = "block";
-    widget.querySelector("input").focus();
+    this.searchWidget.classList.remove("hidden");
+    const input = this.searchWidget.querySelector(".search-input");
+    input.focus();
+    input.select();
   }
 
   hideSearchWidget() {
-    const widget = this.widgetLayer.querySelector(".search-widget");
-    if (widget) widget.style.display = "none";
+    this.searchWidget.classList.add("hidden");
   }
 }

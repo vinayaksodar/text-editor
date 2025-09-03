@@ -4,6 +4,7 @@ import { EditorView } from "./editor/EditorView.js";
 import { EditorController } from "./editor/EditorController.js";
 import { createWidgetLayer } from "./components/WidgetLayer/WidgetLayer.js";
 import { createToolbar } from "./components/Toolbar/Toolbar.js";
+import { createEditorContainer } from "./components/EditorContainer/EditorContainer.js";
 const app = document.querySelector("#app");
 
 // Root wrapper
