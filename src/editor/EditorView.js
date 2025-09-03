@@ -279,4 +279,30 @@ export class EditorView {
   hideSearchWidget() {
     this.searchWidget.classList.add("hidden");
   }
+
+  // Scroll to ensure a specific line is visible
+  scrollToLine(lineNumber) {
+    const lineHeight = parseInt(
+      getComputedStyle(this.container).lineHeight,
+      10
+    );
+    const clientHeight = this.container.clientHeight;
+    const visibleLines = Math.ceil(clientHeight / lineHeight);
+    
+    // Calculate target scroll position to center the line
+    const targetScrollTop = Math.max(0, 
+      (lineNumber - Math.floor(visibleLines / 2)) * lineHeight
+    );
+    
+    // Only scroll if the line is not currently visible
+    const currentScrollTop = this.container.scrollTop;
+    const lineTop = lineNumber * lineHeight;
+    const lineBottom = lineTop + lineHeight;
+    const viewportTop = currentScrollTop;
+    const viewportBottom = currentScrollTop + clientHeight;
+    
+    if (lineTop < viewportTop || lineBottom > viewportBottom) {
+      this.container.scrollTop = targetScrollTop;
+    }
+  }
 }

@@ -59,6 +59,9 @@ export class SearchHandler {
     if (this.currentMatchIndex >= 0) {
       const match = this.currentMatches[this.currentMatchIndex];
       this.model.updateCursor({ line: match.line, ch: match.start });
+      
+      // Scroll to ensure the first match is visible
+      this.view.scrollToLine(match.line);
       this.view.render();
     }
   }
@@ -74,6 +77,9 @@ export class SearchHandler {
 
     const match = this.currentMatches[this.currentMatchIndex];
     this.model.updateCursor({ line: match.line, ch: match.start });
+    
+    // Scroll to ensure the match is visible
+    this.view.scrollToLine(match.line);
     this.view.render();
   }
 }
