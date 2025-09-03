@@ -83,9 +83,9 @@ export class EditorController {
       return;
     }
 
-    // Escape → Hide Search and focus editor
+    // Escape → Close Search and focus editor
     if (e.key === "Escape") {
-      this.view.hideSearchWidget();
+      this.searchHandler.closeSearch();
       this.view.container.focus();
     }
   };
@@ -298,17 +298,15 @@ export class EditorController {
   }
 
   handleUndo() {
-    const command = this.undoManager.undo();
-    if (command) {
-      command.undo(this.model);
+    if (this.undoManager.canUndo()) {
+      this.undoManager.undo();
       this.view.render();
     }
   }
 
   handleRedo() {
-    const command = this.undoManager.redo();
-    if (command) {
-      command.execute(this.model);
+    if (this.undoManager.canRedo()) {
+      this.undoManager.redo();
       this.view.render();
     }
   }
@@ -316,15 +314,26 @@ export class EditorController {
   async handleCut() {
     if (this.model.hasSelection()) {
       const text = this.model.getSelectedText();
-      await navigator.clipboard.writeText(text);
-      this.executeCommand(new DeleteSelectionCommand());
+      try {
+        await navigator.clipboard.writeText(text);
+        this.executeCommand(new DeleteSelectionCommand(this.model));
+      } catch (error) {
+        console.error('Cut failed:', error);
+        // Fallback: just delete the selection without copying
+        this.executeCommand(new DeleteSelectionCommand(this.model));
+      }
     }
   }
 
   async handleCopy() {
     if (this.model.hasSelection()) {
       const text = this.model.getSelectedText();
-      await navigator.clipboard.writeText(text);
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (error) {
+        console.error('Copy failed:', error);
+        // Could show a message to user that copy failed
+      }
     }
   }
 
@@ -332,10 +341,11 @@ export class EditorController {
     try {
       const text = await navigator.clipboard.readText();
       if (text) {
-        this.executeCommand(new InsertTextCommand(text));
+        this.executeCommand(new InsertTextCommand(this.model, text));
       }
     } catch (error) {
       console.error('Paste failed:', error);
+      // Could show a message to user that paste failed
     }
   }
 
@@ -401,6 +411,13 @@ export class EditorController {
     });
 
     document.body.appendChild(modal);
+  }
+
+  // Execute a command and add it to undo history
+  executeCommand(command) {
+    command.execute(this.model);
+    this.undoManager.add(command);
+    this.view.render();
   }
 
   // Ensure editor is focused and ready for input

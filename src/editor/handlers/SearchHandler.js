@@ -26,7 +26,7 @@ export class SearchHandler {
 
       if (action === "next") this.jumpToMatch(1);
       if (action === "prev") this.jumpToMatch(-1);
-      if (action === "close") this.view.hideSearchWidget();
+      if (action === "close") this.closeSearch();
     });
   }
 
@@ -81,5 +81,20 @@ export class SearchHandler {
     // Scroll to ensure the match is visible
     this.view.scrollToLine(match.line);
     this.view.render();
+  }
+
+  closeSearch() {
+    // Clear all search state
+    this.currentMatches = [];
+    this.currentMatchIndex = -1;
+    
+    // Clear highlights
+    this.view.clearHighlights();
+    
+    // Clear search input
+    this.input.value = "";
+    
+    // Hide the widget
+    this.view.hideSearchWidget();
   }
 }

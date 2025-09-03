@@ -16,6 +16,9 @@ export class LineNumbersWidget {
     
     this.lineHeight = lineHeight;
 
+    // Ensure the container uses the same line height as the editor
+    this.container.style.lineHeight = this.lineHeight + "px";
+
     // Create spacer for lines before visible area
     const beforeSpacer = document.createElement("div");
     beforeSpacer.style.height = startLine * this.lineHeight + "px";

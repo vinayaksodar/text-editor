@@ -67,10 +67,19 @@ export class EditorView {
   render() {
     const scrollTop = this.container.scrollTop;
     const clientHeight = this.container.clientHeight;
-    const lineHeight = parseInt(
+    
+    // Get computed line height with fallbacks for different screen sizes
+    let lineHeight = parseInt(
       getComputedStyle(this.container).lineHeight,
       10
     );
+    
+    // Fallback if computed style returns 'normal' or invalid value
+    if (!lineHeight || isNaN(lineHeight)) {
+      const fontSize = parseInt(getComputedStyle(this.container).fontSize, 10);
+      lineHeight = Math.round(fontSize * 1.4); // Approximate line-height ratio
+    }
+    
     const buffer = 5;
 
     const totalLines = this.model.lines.length;
@@ -270,7 +279,7 @@ export class EditorView {
     this.cursorBlinkInterval = setInterval(() => {
       const isVisible = this.cursorEl.style.visibility !== "hidden";
       this.cursorEl.style.visibility = isVisible ? "hidden" : "visible";
-    }, 500);
+    }, 530); // Standard cursor blink rate (about 1.06 seconds per cycle)
   }
 
   pauseBlinkAndRestart() {
@@ -284,7 +293,7 @@ export class EditorView {
     if (this.cursorBlinkTimeout) clearTimeout(this.cursorBlinkTimeout);
     this.cursorBlinkTimeout = setTimeout(() => {
       this.startBlink();
-    }, 500); // start blinking again after delay
+    }, 530); // start blinking again after delay
   }
 
   // Add a method for showing search widget

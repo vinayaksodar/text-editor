@@ -4,7 +4,7 @@ import {
   InsertNewLineCommand,
   DeleteSelectionCommand,
   InsertTextCommand,
-} from "../commands";
+} from "../commands.js";
 
 export class KeyboardHandler {
   constructor(controller, container) {
@@ -18,17 +18,9 @@ export class KeyboardHandler {
     const { model, view, undoManager } = this.controller;
 
     // --- UNDO / REDO ---
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
-      undoManager.undo();
-      e.preventDefault();
-      view.render();
-      return;
-    } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
-      undoManager.redo();
-      e.preventDefault();
-      view.render();
-      return;
-    }
+    // Note: Undo/Redo is handled by the global keyboard handler in EditorController
+    // to avoid conflicts with toolbar actions
+    
 
     const isArrow =
       e.key === "ArrowUp" ||

@@ -1,13 +1,68 @@
 #editor-container {
-  flex: 1; /* Take available vertical space */
+  flex: 1;
   padding: 1rem;
   white-space: pre;
   position: relative;
   overflow-y: auto;
-  font-family: monospace;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', monospace;
+  font-size: 14px;
   line-height: 20px;
+  color: #1e293b;
+  background: #ffffff;
+  border: none;
+  outline: none;
+}
+
+#editor-container::-webkit-scrollbar {
+  width: 12px;
+}
+
+#editor-container::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 6px;
+}
+
+#editor-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 6px;
+  border: 2px solid #f1f5f9;
+}
+
+#editor-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .line {
   display: block;
+  min-height: 20px;
+  position: relative;
+}
+
+/* Mobile responsive editor */
+@media (max-width: 768px) {
+  #editor-container {
+    padding: 0.75rem;
+    font-size: 13px;
+    line-height: 18px;
+  }
+  
+  .line {
+    min-height: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  #editor-container {
+    padding: 0.5rem;
+    font-size: 12px;
+    line-height: 16px;
+  }
+  
+  .line {
+    min-height: 16px;
+  }
+  
+  #editor-container::-webkit-scrollbar {
+    width: 8px;
+  }
 }
