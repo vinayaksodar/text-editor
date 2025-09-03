@@ -22,7 +22,7 @@ A minimal, high-performance text editor built with vanilla JavaScript featuring 
 ### Handler System
 
 - **KeyboardHandler**: Processes keyboard input and shortcuts
-- **MouseHandler**: Manages mouse interactions and text selection
+- **PointerHandler**: Manages mouse interactions and text selection
 - **SearchHandler**: Implements search functionality with highlighting
 
 ### UI Components
@@ -107,7 +107,7 @@ src/
 │   ├── undoManager.js          # Undo/redo system
 │   └── handlers/
 │       ├── KeyboardHandler.js  # Keyboard input handling
-│       ├── MouseHandler.js     # Mouse interaction handling
+│       ├── PointerHandler.js     # Mouse interaction handling
 │       └── SearchHandler.js    # Search functionality
 ├── components/
 │   ├── EditorContainer/        # Main editor container
@@ -123,6 +123,7 @@ src/
 ### Custom Model System
 
 The `EditorModel` class provides:
+
 - Line-based text storage for efficient manipulation
 - Cursor and selection state management
 - Text insertion, deletion, and modification operations
@@ -131,6 +132,7 @@ The `EditorModel` class provides:
 ### Virtualization Implementation
 
 The virtualization system:
+
 - Calculates visible line range based on scroll position
 - Renders only necessary DOM elements
 - Maintains cursor positioning accuracy across virtual boundaries
@@ -139,6 +141,7 @@ The virtualization system:
 ### Search System
 
 Advanced search capabilities:
+
 - Real-time search with instant highlighting
 - Case-sensitive and case-insensitive options
 - Navigation between search matches
@@ -166,12 +169,14 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Performance Notes
 
 The editor is optimized for:
+
 - Documents with up to 100,000 lines
 - Smooth scrolling at 60fps
 - Sub-100ms response time for text operations
 - Memory usage under 50MB for typical documents
 
 For extremely large files (1M+ lines), consider implementing additional optimizations such as:
+
 - Line-level lazy loading
 - Background text processing
 - Progressive rendering strategies

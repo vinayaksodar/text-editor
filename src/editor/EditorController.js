@@ -6,7 +6,7 @@ import {
   DeleteSelectionCommand,
   InsertTextCommand,
 } from "./commands.js";
-import { MouseHandler } from "./handlers/MouseHandler.js";
+import { PointerHandler } from "./handlers/PointerHandler.js";
 import { KeyboardHandler } from "./handlers/KeyboardHandler.js";
 import { SearchHandler } from "./handlers/SearchHandler.js";
 
@@ -26,7 +26,7 @@ export class EditorController {
 
     this.hiddenInput.focus();
 
-    this.mouseHandler = new MouseHandler(this, this.container);
+    this.pointerHandler = new PointerHandler(this, this.container);
     this.keyBoardHandler = new KeyboardHandler(this, this.hiddenInput);
     this.searchHandler = new SearchHandler(this, this.view, this.model);
 
