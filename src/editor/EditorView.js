@@ -1,14 +1,22 @@
 import { createSearchWidget } from "../components/SearchWidget/SearchWidget,js";
+import { createLineNumbers, LineNumbersWidget } from "../components/LineNumbers/LineNumbers.js";
+
 export class EditorView {
-  constructor(model, container, widgetLayer) {
+  constructor(model, container, widgetLayer, lineNumbersContainer) {
     this.model = model;
     this.container = container;
     this.widgetLayer = widgetLayer;
+    this.lineNumbersContainer = lineNumbersContainer;
 
     // Create floating search widget inside widget layer
     this.searchWidget = createSearchWidget();
     this.widgetLayer.appendChild(this.searchWidget);
     this.searchMatches = [];
+
+    // Create line numbers widget
+    if (this.lineNumbersContainer) {
+      this.lineNumbers = new LineNumbersWidget(this.lineNumbersContainer);
+    }
 
     this.cursorEl = document.createElement("div");
     this.cursorEl.className = "cursor";
@@ -23,7 +31,13 @@ export class EditorView {
     this.endLine = 0;
 
     this.container.addEventListener("scroll", () => {
-      requestAnimationFrame(() => this.render());
+      requestAnimationFrame(() => {
+        this.render();
+        // Sync line numbers scroll
+        if (this.lineNumbers) {
+          this.lineNumbers.syncScroll(this.container.scrollTop);
+        }
+      });
     });
   }
 
@@ -167,6 +181,11 @@ export class EditorView {
     const afterSpacer = document.createElement("div");
     afterSpacer.style.height = (totalLines - endLine) * lineHeight + "px";
     this.container.appendChild(afterSpacer);
+
+    // Update line numbers
+    if (this.lineNumbers) {
+      this.lineNumbers.render(startLine, endLine, totalLines, lineHeight);
+    }
 
     this.updateCursor();
   }

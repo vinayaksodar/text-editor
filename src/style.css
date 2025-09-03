@@ -8,3 +8,38 @@ body {
   margin: 0;
   padding: 0;
 }
+
+/* Editor area layout */
+.editor-area {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Line numbers styling */
+.line-numbers {
+  width: 60px;
+  background-color: #f8f8f8;
+  border-right: 1px solid #e0e0e0;
+  overflow: hidden;
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 20px; /* Match editor line height */
+  color: #666;
+  user-select: none;
+  flex-shrink: 0;
+  padding-top: 1rem; /* Match editor padding */
+}
+
+.line-number {
+  text-align: right;
+  padding-right: 8px;
+  padding-left: 4px;
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+
+/* Update editor container to work with line numbers */
+.editor-container {
+  flex: 1;
+}
