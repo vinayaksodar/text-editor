@@ -2,6 +2,7 @@ import "./style.css";
 import { EditorModel } from "./editor/EditorModel.js";
 import { EditorView } from "./editor/EditorView.js";
 import { EditorController } from "./editor/EditorController.js";
+import { FileManager } from "./editor/FileManager.js";
 import { createWidgetLayer } from "./components/WidgetLayer/WidgetLayer.js";
 import { createToolbar } from "./components/Toolbar/Toolbar.js";
 import { createEditorContainer } from "./components/EditorContainer/EditorContainer.js";
@@ -47,7 +48,24 @@ for (let i = 1; i <= 20000; i++) {
 
 // Setup editor with generated text
 const model = new EditorModel(bigText);
+const fileManager = new FileManager(model);
 const view = new EditorView(model, editorContainer, widgetLayer, lineNumbersContainer);
-const controller = new EditorController(model, view, wrapper, toolbar);
+const controller = new EditorController(model, view, wrapper, toolbar, fileManager);
+
+// Try to load from auto-save first
+if (fileManager.loadFromAutoSave()) {
+  console.log('Loaded from auto-save');
+}
+
+// Add focus management to editor area and line numbers
+editorArea.addEventListener('click', (e) => {
+  // Focus the editor when clicking anywhere in the editor area
+  editorContainer.focus();
+});
+
+lineNumbersContainer.addEventListener('click', (e) => {
+  // Focus the editor when clicking on line numbers
+  editorContainer.focus();
+});
 
 view.render();

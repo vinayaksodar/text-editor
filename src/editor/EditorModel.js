@@ -244,4 +244,20 @@ export class EditorModel {
     this.cursor.line = line;
     this.cursor.ch = ch;
   }
+
+  // Get all text as a single string
+  getText() {
+    return this.lines.join('\n');
+  }
+
+  // Set all text from a string
+  setText(text) {
+    this.lines = text.split('\n');
+    // Ensure we always have at least one line
+    if (this.lines.length === 0) {
+      this.lines = [''];
+    }
+    this.cursor = { line: 0, ch: 0 };
+    this.selection = null;
+  }
 }

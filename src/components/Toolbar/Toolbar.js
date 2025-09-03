@@ -7,7 +7,16 @@ export function createToolbar() {
   toolbar.setAttribute("aria-label", "Editor toolbar");
 
   toolbar.innerHTML = `
-    <button type="button" class="iconbtn" data-action="open" aria-label="Open (Ctrl+O)" title="Open (Ctrl+O)">
+    <button type="button" class="iconbtn" data-action="new" aria-label="New File (Ctrl+N)" title="New File (Ctrl+N)">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <polyline points="14,2 14,8 20,8" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <line x1="12" y1="18" x2="12" y2="12" stroke="currentColor" stroke-width="1.6"/>
+        <line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="1.6"/>
+      </svg>
+    </button>
+
+    <button type="button" class="iconbtn" data-action="open" aria-label="Open File (Ctrl+O)" title="Open File (Ctrl+O)">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M3 6h6l2 2h10v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6z" fill="none" stroke="currentColor" stroke-width="1.6" />
         <path d="M3 10h18" stroke="currentColor" stroke-width="1.6" />
@@ -19,6 +28,23 @@ export function createToolbar() {
         <path d="M5 4h11l3 3v13H5z" fill="none" stroke="currentColor" stroke-width="1.6"/>
         <path d="M8 4v6h8V6" fill="none" stroke="currentColor" stroke-width="1.6"/>
         <rect x="8" y="14" width="8" height="4" rx="1" fill="none" stroke="currentColor" stroke-width="1.6"/>
+      </svg>
+    </button>
+
+    <button type="button" class="iconbtn" data-action="export" aria-label="Export/Download" title="Export/Download">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <polyline points="7,10 12,15 17,10" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="1.6"/>
+      </svg>
+    </button>
+
+    <button type="button" class="iconbtn" data-action="files" aria-label="Manage Files" title="Manage Saved Files">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <polyline points="13,2 13,9 20,9" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <line x1="9" y1="13" x2="15" y2="13" stroke="currentColor" stroke-width="1.6"/>
+        <line x1="9" y1="17" x2="15" y2="17" stroke="currentColor" stroke-width="1.6"/>
       </svg>
     </button>
 
