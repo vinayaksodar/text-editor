@@ -4,9 +4,6 @@
   // See https://hub.docker.com/_/microsoft-vscode-devcontainers for more options.
   "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
 
-  // Set the workspace folder in the container.
-  "workspaceFolder": "/workspace",
-
   // Forward the port that Vite uses.
   "forwardPorts": [5173],
   "portsAttributes": {
@@ -32,7 +29,7 @@
         "ritwickdey.liveserver"
       ]
     }
-  },
+  }
 
   // Uncomment to connect as a non-root user.
   // "remoteUser": "node"
