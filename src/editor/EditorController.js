@@ -9,15 +9,15 @@ import {
 import { PointerHandler } from "./handlers/PointerHandler.js";
 import { KeyboardHandler } from "./handlers/KeyboardHandler.js";
 import { SearchHandler } from "./handlers/SearchHandler.js";
+import { FileManager } from "./FileManager.js";
 
 export class EditorController {
-  constructor(model, view, wrapper, toolbar, fileManager, hiddenInput) {
+  constructor(model, view, wrapper, toolbar, hiddenInput) {
     this.model = model;
     this.view = view;
     this.container = view.container;
     this.hiddenInput = hiddenInput;
     this.toolbar = toolbar;
-    this.fileManager = fileManager;
 
     // Ensure container gets focus when clicked
     this.container.addEventListener("click", () => {
@@ -29,7 +29,7 @@ export class EditorController {
     this.pointerHandler = new PointerHandler(this, this.container);
     this.keyBoardHandler = new KeyboardHandler(this, this.hiddenInput);
     this.searchHandler = new SearchHandler(this, this.view, this.model);
-
+    this.fileManager = new FileManager(this.model, this.view, this.hiddenInput);
     this.undoManager = new UndoManager();
 
     // Setup toolbar event handling
@@ -41,25 +41,6 @@ export class EditorController {
 
   onGlobalKeyDown = (e) => {
     const isCtrlOrCmd = e.ctrlKey || e.metaKey;
-
-    // File operations
-    if (isCtrlOrCmd && e.key === "n") {
-      e.preventDefault();
-      this.handleNewFile();
-      return;
-    }
-
-    if (isCtrlOrCmd && e.key === "o") {
-      e.preventDefault();
-      this.handleOpenFile();
-      return;
-    }
-
-    if (isCtrlOrCmd && e.key === "s") {
-      e.preventDefault();
-      this.handleSaveFile();
-      return;
-    }
 
     // Search
     if (isCtrlOrCmd && e.key === "f") {
@@ -210,24 +191,19 @@ export class EditorController {
     try {
       switch (action) {
         case "new":
-          this.handleNewFile();
+          this.fileManager.handleNewFile();
           break;
         case "open":
-          await this.handleOpenFile();
+          await this.fileManager.handleOpenFile();
           break;
         case "save":
-          this.handleSaveFile();
-          // Focus editor after save
-          this.hiddenInput.focus();
+          this.fileManager.handleSaveFile();
           break;
         case "export":
-          this.handleExportFile();
-          // Focus editor after export
-          this.hiddenInput.focus();
+          this.fileManager.handleExportFile();
           break;
         case "files":
-          this.handleManageFiles();
-          // Focus will be handled when modal closes
+          this.fileManager.handleManageFiles();
           break;
         case "undo":
           this.handleUndo();
@@ -260,47 +236,6 @@ export class EditorController {
       // Focus editor even after errors
       this.hiddenInput.focus();
     }
-  }
-
-  handleNewFile() {
-    if (this.fileManager.hasUnsavedChanges()) {
-      if (!confirm("You have unsaved changes. Create new file anyway?")) {
-        return;
-      }
-    }
-    this.fileManager.newFile();
-    this.focusEditor();
-  }
-
-  async handleOpenFile() {
-    try {
-      const result = await this.fileManager.importFile();
-      this.focusEditor();
-      console.log(`Opened file: ${result.fileName} (${result.size} bytes)`);
-    } catch (error) {
-      if (error.message !== "No file selected") {
-        throw error;
-      }
-    }
-  }
-
-  handleSaveFile() {
-    const fileName = prompt(
-      "Enter filename:",
-      this.fileManager.currentFileName
-    );
-    if (fileName) {
-      this.fileManager.saveToLocalStorage(fileName);
-      console.log(`Saved as: ${fileName}`);
-    }
-  }
-
-  handleExportFile() {
-    this.fileManager.exportFile();
-  }
-
-  handleManageFiles() {
-    this.showFileManager();
   }
 
   handleUndo() {
@@ -358,67 +293,6 @@ export class EditorController {
   handleSearch() {
     this.view.showSearchWidget();
     this.view.searchWidget.querySelector(".search-input").focus();
-  }
-
-  showFileManager() {
-    // Create a simple file manager modal
-    const modal = document.createElement("div");
-    modal.className = "file-manager-modal";
-    modal.innerHTML = `
-      <div class="file-manager-content">
-        <h3>Manage Files</h3>
-        <div class="file-list"></div>
-        <div class="file-manager-actions">
-          <button class="btn" data-action="close">Close</button>
-        </div>
-      </div>
-    `;
-
-    const fileList = modal.querySelector(".file-list");
-    const savedFiles = this.fileManager.getSavedFiles();
-
-    if (Object.keys(savedFiles).length === 0) {
-      fileList.innerHTML = "<p>No saved files</p>";
-    } else {
-      Object.entries(savedFiles).forEach(([fileName, fileData]) => {
-        const fileItem = document.createElement("div");
-        fileItem.className = "file-item";
-        fileItem.innerHTML = `
-          <span class="file-name">${fileName}</span>
-          <span class="file-date">${new Date(
-            fileData.timestamp
-          ).toLocaleString()}</span>
-          <button class="btn-small" data-action="load" data-filename="${fileName}">Load</button>
-          <button class="btn-small btn-danger" data-action="delete" data-filename="${fileName}">Delete</button>
-        `;
-        fileList.appendChild(fileItem);
-      });
-    }
-
-    modal.addEventListener("click", (e) => {
-      const action = e.target.dataset.action;
-      const fileName = e.target.dataset.filename;
-
-      if (action === "close") {
-        document.body.removeChild(modal);
-        // Restore focus to editor when modal closes
-        this.hiddenInput.focus();
-      } else if (action === "load") {
-        if (this.fileManager.loadFromLocalStorage(fileName)) {
-          this.focusEditor();
-          document.body.removeChild(modal);
-        }
-      } else if (action === "delete") {
-        if (confirm(`Delete file "${fileName}"?`)) {
-          this.fileManager.deleteFromLocalStorage(fileName);
-          this.showFileManager(); // Refresh the modal
-          document.body.removeChild(modal);
-          // Focus will be handled by the new modal
-        }
-      }
-    });
-
-    document.body.appendChild(modal);
   }
 
   // Execute a command and add it to undo history

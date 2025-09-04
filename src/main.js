@@ -49,7 +49,7 @@ for (let i = 1; i <= 20000; i++) {
 
 // Setup editor with generated text
 const model = new EditorModel(bigText);
-const fileManager = new FileManager(model);
+
 const view = new EditorView(
   model,
   editorContainer,
@@ -61,12 +61,11 @@ const controller = new EditorController(
   view,
   wrapper,
   toolbar,
-  fileManager,
   hiddenInput
 );
 
 // Try to load from auto-save first
-if (fileManager.loadFromAutoSave()) {
+if (controller.fileManager.loadFromAutoSave()) {
   console.log("Loaded from auto-save");
 }
 
