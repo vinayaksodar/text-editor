@@ -10,6 +10,7 @@ import { PointerHandler } from "./handlers/PointerHandler.js";
 import { KeyboardHandler } from "./handlers/KeyboardHandler.js";
 import { SearchHandler } from "./handlers/SearchHandler.js";
 import { FileManager } from "./handlers/FileHandler.js";
+import { ToolbarHandler } from "./handlers/ToolbarHandler.js";
 
 export class EditorController {
   constructor(model, view, wrapper, toolbar, hiddenInput) {
@@ -30,10 +31,8 @@ export class EditorController {
     this.keyBoardHandler = new KeyboardHandler(this, this.hiddenInput);
     this.searchHandler = new SearchHandler(this, this.view, this.model);
     this.fileManager = new FileManager(this.model, this.view, this.hiddenInput);
+    this.toolbarHandler = new ToolbarHandler(this);
     this.undoManager = new UndoManager();
-
-    // Setup toolbar event handling
-    this.setupToolbarHandlers();
 
     // Listen for global shortcuts
     window.addEventListener("keydown", this.onGlobalKeyDown);
@@ -175,68 +174,7 @@ export class EditorController {
     return { line: this.view.startLine + closestLineIdx, ch: closestCh };
   }
 
-  setupToolbarHandlers() {
-    if (!this.toolbar) return;
-
-    this.toolbar.addEventListener("click", (e) => {
-      const button = e.target.closest(".iconbtn");
-      if (!button) return;
-
-      const action = button.dataset.action;
-      this.handleToolbarAction(action);
-    });
-  }
-
-  async handleToolbarAction(action) {
-    try {
-      switch (action) {
-        case "new":
-          this.fileManager.handleNewFile();
-          break;
-        case "open":
-          await this.fileManager.handleOpenFile();
-          break;
-        case "save":
-          this.fileManager.handleSaveFile();
-          break;
-        case "export":
-          this.fileManager.handleExportFile();
-          break;
-        case "files":
-          this.fileManager.handleManageFiles();
-          break;
-        case "undo":
-          this.handleUndo();
-          this.hiddenInput.focus();
-          break;
-        case "redo":
-          this.handleRedo();
-          this.hiddenInput.focus();
-          break;
-        case "cut":
-          await this.handleCut();
-          this.hiddenInput.focus();
-          break;
-        case "copy":
-          await this.handleCopy();
-          this.hiddenInput.focus();
-          break;
-        case "paste":
-          await this.handlePaste();
-          this.hiddenInput.focus();
-          break;
-        case "search":
-          this.handleSearch();
-          // Search widget will handle its own focus
-          break;
-      }
-    } catch (error) {
-      console.error("Toolbar action failed:", error);
-      alert("Operation failed: " + error.message);
-      // Focus editor even after errors
-      this.hiddenInput.focus();
-    }
-  }
+  
 
   handleUndo() {
     if (this.undoManager.canUndo()) {
