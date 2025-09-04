@@ -175,6 +175,11 @@ export class PointerHandler {
     }
 
     this.cancelInteraction();
+
+    //  Ensure hidden input gets focus again so keyboard works
+    if (this.controller.hiddenInput) {
+      this.controller.hiddenInput.focus();
+    }
   }
 
   /**
