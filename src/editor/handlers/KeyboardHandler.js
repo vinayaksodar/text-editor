@@ -3,7 +3,6 @@ import {
   InsertCharCommand,
   InsertNewLineCommand,
   DeleteSelectionCommand,
-  InsertTextCommand,
 } from "../commands.js";
 
 export class KeyboardHandler {
@@ -71,51 +70,19 @@ export class KeyboardHandler {
 
     // --- CUT / COPY / PASTE ---
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c") {
-      if (model.hasSelection()) {
-        const text = model.getSelectedText();
-        navigator.clipboard.writeText(text).catch(() => {
-          document.execCommand("copy");
-        });
-      }
+      this.controller.handleCopy();
       e.preventDefault();
       return;
     }
 
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "x") {
-      if (model.hasSelection()) {
-        const text = model.getSelectedText();
-        navigator.clipboard.writeText(text).catch(() => {
-          document.execCommand("cut");
-        });
-        const cmd = new DeleteSelectionCommand(model);
-        cmd.execute();
-        undoManager.add(cmd);
-        view.render();
-      }
+      this.controller.handleCut();
       e.preventDefault();
       return;
     }
 
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "v") {
-      navigator.clipboard.readText().then((text) => {
-        if (!text) return;
-
-        undoManager.endBatch();
-        undoManager.beginBatch();
-
-        if (model.hasSelection()) {
-          const delCmd = new DeleteSelectionCommand(model);
-          delCmd.execute();
-          undoManager.add(delCmd);
-        }
-
-        const insertCmd = new InsertTextCommand(model, text);
-        insertCmd.execute();
-        undoManager.add(insertCmd);
-
-        undoManager.endBatch();
-        view.render();
-      });
+      this.controller.handlePaste();
       e.preventDefault();
       return;
     }
