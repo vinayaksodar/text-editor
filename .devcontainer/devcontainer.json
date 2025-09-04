@@ -1,35 +1,39 @@
-// The Dev Container format allows you to configure your environment. At the heart of it
-// is a Docker image or Dockerfile which controls the tools available in your environment.
-//
-// See https://aka.ms/devcontainer.json for more information.
 {
-	"name": "Ona",
-	// This universal image (~10GB) includes many development tools and languages,
-	// providing a convenient all-in-one development environment.
-	//
-	// This image is already available on remote runners for fast startup. On desktop
-	// and linux runners, it will need to be downloaded, which may take longer.
-	//
-	// For faster startup on desktop/linux, consider a smaller, language-specific image:
-	// • For Python: mcr.microsoft.com/devcontainers/python:3.13
-	// • For Node.js: mcr.microsoft.com/devcontainers/javascript-node:24
-	// • For Go: mcr.microsoft.com/devcontainers/go:1.24
-	// • For Java: mcr.microsoft.com/devcontainers/java:21
-	//
-	// Browse more options at: https://hub.docker.com/r/microsoft/devcontainers
-	// or build your own using the Dockerfile option below.
-	"image": "mcr.microsoft.com/devcontainers/universal:3.0.3"
-	// Use "build":
-	// instead of the image to use a Dockerfile to build an image.
-	// "build": {
-    //     "context": ".",
-    //     "dockerfile": "Dockerfile"
-    // }
-	// Features add additional features to your environment. See https://containers.dev/features
-	// Beware: features are not supported on all platforms and may have unintended side-effects.
-	// "features": {
-    //   "ghcr.io/devcontainers/features/docker-in-docker": {
-    //     "moby": false
-    //   }
-    // }
+  "name": "Text Editor Dev Environment",
+  // Use the official Microsoft Node.js image.
+  // See https://hub.docker.com/_/microsoft-vscode-devcontainers for more options.
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+
+  // Set the workspace folder in the container.
+  "workspaceFolder": "/workspace",
+
+  // Forward the port that Vite uses.
+  "forwardPorts": [5173],
+  "portsAttributes": {
+    "5173": {
+      "label": "Vite Dev Server",
+      "onAutoForward": "openPreview"
+    }
+  },
+
+  // Run 'npm install' after the container is created.
+  "postCreateCommand": "npm install",
+
+  // Configure VS Code settings and extensions.
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+      },
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ritwickdey.liveserver"
+      ]
+    }
+  },
+
+  // Uncomment to connect as a non-root user.
+  // "remoteUser": "node"
 }
