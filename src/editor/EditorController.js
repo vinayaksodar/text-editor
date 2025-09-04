@@ -9,7 +9,7 @@ import {
 import { PointerHandler } from "./handlers/PointerHandler.js";
 import { KeyboardHandler } from "./handlers/KeyboardHandler.js";
 import { SearchHandler } from "./handlers/SearchHandler.js";
-import { FileManager } from "./FileManager.js";
+import { FileManager } from "./handlers/FileHandler.js";
 
 export class EditorController {
   constructor(model, view, wrapper, toolbar, hiddenInput) {
