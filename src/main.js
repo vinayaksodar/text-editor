@@ -41,14 +41,18 @@ wrapper.appendChild(editorArea);
 
 app.appendChild(wrapper);
 
-// Generate a lot of text
-let bigText = "";
-for (let i = 1; i <= 20000; i++) {
-  bigText += `Line ${i}: This is some sample text for testing the editor.\n`;
-}
+// // Generate a lot of text
+// let bigText = "";
+// for (let i = 1; i <= 20000; i++) {
+//   bigText += `Line ${i}: This is some sample text for testing the editor.\n`;
+// }
+
+// Welcome text
+let welcomeText =
+  "Welcome to your editor!\nStart typing here, or paste your text.\nYou can also import files and save files to both browser local storage\n and your device storge(To get started, just delete this message.)";
 
 // Setup editor with generated text
-const model = new EditorModel(bigText);
+const model = new EditorModel(welcomeText);
 
 const view = new EditorView(
   model,
