@@ -6,7 +6,11 @@ export function createToolbar() {
   toolbar.setAttribute("role", "toolbar");
   toolbar.setAttribute("aria-label", "Editor toolbar");
 
-  toolbar.innerHTML = `
+  const mainContent = document.createElement("div");
+  mainContent.className = "iconbar-main-content";
+  toolbar.appendChild(mainContent);
+
+  mainContent.innerHTML = `
     <button type="button" class="iconbtn" data-action="new" aria-label="New File (Ctrl+N)" title="New File (Ctrl+N)">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" fill="none" stroke="currentColor" stroke-width="1.6"/>
@@ -98,6 +102,86 @@ export function createToolbar() {
       </svg>
     </button>
   `;
+
+  const moreButtonContainer = document.createElement("div");
+  moreButtonContainer.className = "iconbar-more-container";
+  toolbar.appendChild(moreButtonContainer);
+
+  const moreButton = document.createElement("button");
+  moreButton.type = "button";
+  moreButton.className = "iconbtn iconbar-more-button";
+  moreButton.setAttribute("aria-label", "More actions");
+  moreButton.setAttribute("title", "More actions");
+  moreButton.innerHTML = `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="1.5" />
+      <circle cx="6" cy="12" r="1.5" />
+      <circle cx="18" cy="12" r="1.5" />
+    </svg>
+  `;
+  moreButtonContainer.appendChild(moreButton);
+
+  const dropdown = document.createElement("div");
+  dropdown.className = "iconbar-dropdown";
+  moreButtonContainer.appendChild(dropdown);
+
+  moreButton.addEventListener("click", (e) => {
+    e.stopPropagation();
+    dropdown.classList.toggle("visible");
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!moreButtonContainer.contains(e.target)) {
+      dropdown.classList.remove("visible");
+    }
+  });
+
+  const handleResize = () => {
+    const availableWidth = toolbar.clientWidth;
+    const moreButtonWidth = moreButtonContainer.offsetWidth;
+    let requiredWidth = 0;
+
+    // Make all items visible to measure them
+    const children = Array.from(mainContent.children);
+    children.forEach(child => {
+        child.style.display = '';
+    });
+
+    dropdown.innerHTML = '';
+    let visibleItemsWidth = 0;
+    let firstItemToHide = -1;
+
+    for (let i = 0; i < children.length; i++) {
+        const child = children[i];
+        const childWidth = child.offsetWidth + 4; // 4 is the gap
+        if (visibleItemsWidth + childWidth > availableWidth - moreButtonWidth) {
+            firstItemToHide = i;
+            break;
+        }
+        visibleItemsWidth += childWidth;
+    }
+
+    if (firstItemToHide !== -1) {
+        moreButtonContainer.style.visibility = 'visible';
+        for (let i = 0; i < children.length; i++) {
+            const child = children[i];
+            if (i >= firstItemToHide) {
+                child.style.display = 'none';
+                const clone = child.cloneNode(true);
+                clone.style.display = '';
+                dropdown.appendChild(clone);
+            }
+        }
+    } else {
+        moreButtonContainer.style.visibility = 'hidden';
+    }
+  };
+
+  const observer = new ResizeObserver(handleResize);
+  observer.observe(toolbar);
+
+  // Initial check
+  setTimeout(handleResize, 0);
 
   return toolbar;
 }

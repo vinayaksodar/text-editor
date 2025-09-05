@@ -1,5 +1,5 @@
 .iconbar {
-  display: inline-flex;
+  display: flex; /* Changed to flex for alignment */
   align-items: center;
   gap: 4px;
   padding: 8px;
@@ -9,6 +9,17 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
   user-select: none;
   margin: 8px;
+  width: max-content; /* Ensure it doesn't stretch unnecessarily */
+  max-width: 100%; /* Prevent overflow from the viewport */
+  position: relative; /* For positioning dropdown */
+}
+
+.iconbar-main-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: nowrap; /* Prevent wrapping */
+  overflow: hidden; /* Hide overflowing items */
 }
 
 .iconbtn {
@@ -24,6 +35,7 @@
   cursor: pointer;
   transition: all 150ms ease;
   position: relative;
+  flex-shrink: 0; /* Prevent buttons from shrinking */
 }
 
 .iconbtn svg {
@@ -65,15 +77,58 @@
   background: #d1d5db;
   margin: 0 4px;
   border-radius: 0.5px;
+  flex-shrink: 0;
+}
+
+/* More button and dropdown */
+.iconbar-more-container {
+  position: relative;
+  visibility: hidden; /* Initially hidden */
+}
+
+.iconbar-more-button {
+  /* Styles for the more button */
+}
+
+.iconbar-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1001;
+  padding: 4px;
+  margin-top: 4px;
+  display: none;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 4px;
+  width: 200px; /* Adjust as needed */
+}
+
+.iconbar-dropdown.visible {
+  display: flex;
+  width: max-content;
+}
+
+.iconbar-dropdown .iconbtn {
+  width: 38px; /* Same as toolbar icons */
+  justify-content: center;
 }
 
 /* Add subtle animation for better UX */
 .iconbtn::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   border-radius: 8px;
-  background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0)
+  );
   opacity: 0;
   transition: opacity 150ms ease;
 }
@@ -103,27 +158,23 @@
     padding: 6px;
     gap: 2px;
     border-radius: 10px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    overflow: visible; /* Allow dropdown to be visible */
   }
-  
-  .iconbar::-webkit-scrollbar {
-    display: none;
+
+  .iconbar-main-content {
+    overflow-x: hidden;
   }
-  
+
   .iconbtn {
     width: 42px;
     height: 42px;
-    flex-shrink: 0;
   }
-  
+
   .iconbtn svg {
     width: 20px;
     height: 20px;
   }
-  
+
   .sep {
     height: 28px;
     margin: 0 2px;
@@ -136,17 +187,17 @@
     padding: 4px;
     gap: 1px;
   }
-  
+
   .iconbtn {
     width: 40px;
     height: 40px;
   }
-  
+
   .iconbtn svg {
     width: 18px;
     height: 18px;
   }
-  
+
   .sep {
     height: 26px;
     margin: 0 1px;
@@ -159,7 +210,7 @@
     background: transparent;
     transform: none;
   }
-  
+
   .iconbtn:active {
     background: #e5e7eb;
     transform: scale(0.95);
