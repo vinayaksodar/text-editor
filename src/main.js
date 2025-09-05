@@ -49,7 +49,7 @@ app.appendChild(wrapper);
 
 // Welcome text
 let welcomeText =
-  "Welcome to your editor!\nStart typing here, or paste your text.\nYou can also import files and save files to both browser local storage\n and your device storge(To get started, just delete this message.)";
+  "Welcome to your editor!\nStart typing here.\nYou can also import files and save files\nto both browser local storage\nand your device storage\n";
 
 // Setup editor with generated text
 const model = new EditorModel(welcomeText);
